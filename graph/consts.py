@@ -1,0 +1,6 @@
+RETRIEVE = "retrieve"
+GRADE_DOCUMENTS = "grade_documents"
+GENERATE = "generate"
+WEBSEARCH = "websearch"
+REFLECT = "reflect"
+EXECUTE_TOOLS = "execute_tools"
