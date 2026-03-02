@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "company-agentic-rag"
+version = "0.1.0"
+description = "Company Agentic RAG with Reflexion"
+authors = ["Lucio Rapetti <luciorap@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+beautifulsoup4 = "*"
+langchain-community = "*"
+tiktoken = "*"
+langchainhub = "*"
+langchain = "*"
+langgraph = "*"
+tavily-python = "*"
+langchain-groq = "*"
+langchain-huggingface = "*"
+sentence-transformers = "*"
+python-dotenv = "*"
+black = "*"
+isort = "*"
+pytest = "*"
+langchain-chroma = "*"
+langchain-tavily = "^0.1.5"
+langchain-text-splitters = "*"
+pydantic = "*"
+pydantic-settings = "*"
+chromadb = "*"
+langchain-core = "*"
+langchain-openai = "*"
+pypdf = "*"
+python-docx = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
