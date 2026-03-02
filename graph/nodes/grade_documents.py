@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from graph.chains.retrieval_grader import retrieval_grader
+from graph.agent_builder import get_agent_builder
 from graph.state import GraphState
 
 
@@ -8,12 +8,6 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
     """
     Determines whether the retrieved documents are relevant to the question
     If any document is not relevant, we will set a flag to run web search
-
-    Args:
-        state (dict): The current graph state
-
-    Returns:
-        state (dict): Filtered out irrelevant documents and updated web_search state
     """
 
     print("---CHECK DOCUMENT RELEVANCE TO QUESTION---")
@@ -21,13 +15,15 @@ def grade_documents(state: GraphState) -> Dict[str, Any]:
     documents = state["documents"]
     sources = state.get("sources", [])
 
+    builder = get_agent_builder()
+
     filtered_docs = []
     web_search = False
     for d in documents:
-        score = retrieval_grader.invoke(
-            {"question": question, "document": d.page_content} # type: ignore
+        score = builder.retrieval_grader.run(
+            question=question, document=d.page_content
         )
-        grade = score.binary_score # type: ignore
+        grade = score.binary_score
         if grade and grade.lower() == "yes":
             print("---Grade: Document is RELEVANT---")
             filtered_docs.append(d)

@@ -1,16 +1,16 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+from typing import Any, Dict
+
 from langgraph.graph import END, StateGraph
 
-from graph.chains.answer_grader import answer_grader
-from graph.chains.hallucination_grader import hallucination_grader
-from graph.chains.router import RouteQuery, question_router
 from graph.consts import GENERATE, GRADE_DOCUMENTS, RETRIEVE, WEBSEARCH, REFLECT, EXECUTE_TOOLS
 from graph.nodes import generate, grade_documents, retrieve, web_search
 from graph.nodes.reflect import draft_node, revise_node, event_loop, MAX_ITERATIONS
 from graph.nodes.tool_executor import execute_tools
 from graph.state import GraphState
+from graph.agent_builder import get_agent_builder
 
 
 def decide_to_generate(state):
@@ -32,10 +32,12 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
     documents = state["documents"]
     generation = state["generation"]
 
+    builder = get_agent_builder()
+
     if not documents:
         print("---NO DOCUMENTS, SKIP HALLUCINATION CHECK---")
         print("---GRADE GENERATION vs QUESTION---")
-        score = answer_grader.invoke({"question": question, "generation": generation})
+        score = builder.answer_grader.run(question=question, generation=generation)
         if score.binary_score.lower() == "yes":
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
             return "useful"
@@ -43,14 +45,14 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
             print("---DECISION: GENERATION DOES NOT ADDRESS QUESTION---")
             return "not useful"
 
-    score = hallucination_grader.invoke(
-        {"documents": documents, "generation": generation}
+    score = builder.hallucination_grader.run(
+        documents=documents, generation=generation
     )
 
     if score.binary_score.lower() == "yes":
         print("---DECISION: GENERATION IS GROUNDED IN DOCUMENTS---")
         print("---GRADE GENERATION vs QUESTION---")
-        score = answer_grader.invoke({"question": question, "generation": generation})
+        score = builder.answer_grader.run(question=question, generation=generation)
         if score.binary_score.lower() == "yes":
             print("---DECISION: GENERATION ADDRESSES QUESTION---")
             return "useful"
@@ -65,13 +67,18 @@ def grade_generation_grounded_in_documents_and_question(state: GraphState) -> st
 def route_question(state: GraphState) -> str:
     print("---ROUTE QUESTION---")
     question = state["question"]
-    source: RouteQuery = question_router.invoke({"question": question})
+    
+    builder = get_agent_builder()
+    source = builder.router.run(question=question)
+    
     if source.datasource == WEBSEARCH:
         print("---ROUTE QUESTION TO WEB SEARCH---")
         return WEBSEARCH
     elif source.datasource == "vectorstore":
         print("---ROUTE QUESTION TO RAG---")
         return RETRIEVE
+    
+    return RETRIEVE
 
 
 workflow = StateGraph(GraphState)

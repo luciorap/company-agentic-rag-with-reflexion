@@ -60,19 +60,47 @@ Implementation of Reflective RAG, Self-RAG & Adaptive RAG tailored towards devel
 
 ## Components
 
-### Models
-- **LLM**: Groq (Llama 3.3 70B)
-- **Embeddings**: HuggingFace (sentence-transformers/all-MiniLM-L6-v2)
+### AgentBuilder (Main Entry Point)
 
-### APIs
-- **GROQ_API_KEY**: For ChatGroq
-- **TAVILY_API_KEY**: For web search
+All agents are configured once using the `AgentBuilder` class, which creates a single LLM instance shared across all agents.
+
+```python
+from graph.chains import AgentBuilder
+
+# Configure once - model and temperature
+builder = AgentBuilder(
+    model="llama-3.3-70b-versatile",
+    temperature=0
+).build()
+
+# Access all agents
+builder.llm                    # Shared LLM instance
+builder.router                 # Route questions
+builder.retrieval_grader       # Grade document relevance
+builder.answer_grader         # Check if answer addresses question
+builder.hallucination_grader  # Verify grounded in facts
+builder.generation            # Generate answers
+builder.reflection            # Draft & revise with reflection
+```
+
+### Agent Classes
+
+| Agent | Purpose |
+|-------|---------|
+| `RouterAgent` | Routes questions to vectorstore or web search |
+| `RetrievalGraderAgent` | Grades document relevance to question |
+| `AnswerGraderAgent` | Checks if answer addresses the question |
+| `HallucinationGraderAgent` | Verifies generation is grounded in facts |
+| `GenerationAgent` | Generates answers from context |
+| `ReflectionAgent` | Drafts and revises answers with iterative reflection |
 
 ### Technologies
-- LangGraph (orchestration)
-- LangChain (chains)
-- Chroma (vectorstore)
-- Tavily (web search)
+- **LLM**: Groq (Llama 3.3 70B)
+- **Embeddings**: HuggingFace (sentence-transformers/all-MiniLM-L6-v2)
+- **Vectorstore**: Chroma
+- **Web Search**: Tavily
+- **Orchestration**: LangGraph
+- **Chains**: LangChain
 
 ## Environment Variables
 
@@ -101,7 +129,7 @@ poetry install
 
 ## Usage
 
-### 1. Load documents (ingestion)
+### 1. Load Documents (Ingestion)
 
 ```bash
 python ingestion.py
@@ -111,7 +139,7 @@ Loads documents from:
 - Web: crunchbase.com, statista.com, apollo.io
 - Internal: `./internal_docs/` (PDFs and DOCX)
 
-### 2. Run agent
+### 2. Run Agent
 
 ```bash
 python main.py
@@ -131,13 +159,14 @@ python main.py
 ```
 .
 ├── graph/                      # LangGraph graph
-│   ├── chains/                 # LangChain chains
-│   │   ├── answer_grader.py
-│   │   ├── generation.py
+│   ├── chains/                 # Agent classes
+│   │   ├── builder.py          # AgentBuilder (main entry)
+│   │   ├── router.py           # RouterAgent
+│   │   ├── generation.py       # GenerationAgent
+│   │   ├── answer_grader.py    # AnswerGraderAgent
 │   │   ├── hallucination_grader.py
-│   │   ├── reflection_chains.py
 │   │   ├── retrieval_grader.py
-│   │   └── router.py
+│   │   └── reflection_chains.py
 │   ├── nodes/                  # Graph nodes
 │   │   ├── generate.py
 │   │   ├── grade_documents.py
@@ -157,4 +186,29 @@ python main.py
 
 ```bash
 pytest . -s -v
+```
+
+## Customization
+
+### Change Model
+
+```python
+from graph.chains import AgentBuilder
+
+builder = AgentBuilder(
+    model="llama-3.1-70b-versatile",  # Change model
+    temperature=0.5                    # Adjust creativity
+).build()
+```
+
+### Use Custom LLM
+
+```python
+from langchain_groq import ChatGroq
+from graph.chains import AgentBuilder
+
+# Create your own LLM instance
+custom_llm = ChatGroq(model="mixtral-8x7b-32768", temperature=0)
+
+# Pass to builder (requires modifying AgentBuilder to accept llm parameter)
 ```

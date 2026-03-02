@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from graph.chains.generation import generation_chain
+from graph.agent_builder import get_agent_builder
 from graph.state import GraphState
 
 
@@ -9,7 +9,8 @@ def generate(state: GraphState) -> Dict[str, Any]:
     question = state["question"]
     documents = state["documents"]
 
-    generation = generation_chain.invoke({"context": documents, "question": question})
+    builder = get_agent_builder()
+    generation = builder.generation.run(question=question, context=documents)
     
     sources = state.get("sources", [])
     

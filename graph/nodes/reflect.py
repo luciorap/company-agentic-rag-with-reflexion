@@ -2,7 +2,7 @@ from typing import Any, Dict, Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
-from graph.chains.reflection_chains import first_responder, revisor
+from graph.agent_builder import get_agent_builder
 from graph.state import GraphState
 
 
@@ -27,7 +27,8 @@ def draft_node(state: GraphState) -> Dict[str, Any]:
             HumanMessage(content=question),
         ]
     
-    response = first_responder.invoke({"messages": messages})
+    builder = get_agent_builder()
+    response = builder.reflection.draft(question=question, messages=messages)
     
     return {
         "messages": messages + [response],
@@ -41,7 +42,8 @@ def revise_node(state: GraphState) -> Dict[str, Any]:
     print("---REVISING RESPONSE---")
     messages = state.get("messages", [])
     
-    response = revisor.invoke({"messages": messages})
+    builder = get_agent_builder()
+    response = builder.reflection.revise(messages=messages)
     
     iteration_count = state.get("iteration_count", 0) + 1
     
